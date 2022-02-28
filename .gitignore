@@ -1,0 +1,11 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+data/
+dump/
+experiments/exp/
+experiments/notebooks/
+experiments/wandb/
+
