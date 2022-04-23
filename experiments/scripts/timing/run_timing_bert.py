@@ -8,7 +8,7 @@ from src.systems.timing.timing_all_bert_encoding import System
 from src.utils.setup import process_config
 from src.utils.utils import load_json
 from src.utils.trainer_timing import trainer
-from src.datasets.timing_dataset import get_dataloader, get_dataset
+from src.datasets.timing_dataset2 import get_dataloader, get_dataset
 import wandb
 
 
@@ -43,7 +43,7 @@ def run(config_path, gpu_device=-1):
 	model = ModelClass(config, device, config.model_params.input_dim, train_dataset.num_class)
 	del train_dataset
 	del val_dataset
-	model.asr_model.load_state_dict(torch.load(config.streaming_asr_continue_from_checkpoint), strict=False)
+	#model.asr_model.load_state_dict(torch.load(config.streaming_asr_continue_from_checkpoint), strict=False)
 	model.text_encoder.asr_model.load_state_dict(torch.load(config.asr_continue_from_checkpoint), strict=False)
 	#model.slu_model.context_encoder.load_state_dict(torch.load(config.context_continue_from_checkpoint), strict=False)
 	#model.slu_model.dialog_acts_model.load_state_dict(torch.load(config.da_continue_from_checkpoint), strict=False)

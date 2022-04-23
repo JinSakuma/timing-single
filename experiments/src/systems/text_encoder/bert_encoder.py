@@ -30,7 +30,7 @@ with open('/mnt/aoni04/jsakuma/development/timing-single/experiments/exp/asr/voc
     subwords_list = f.read().split("\n")
     
 def id2token(id_list):
-    idx = [subwords_list[i] for i in id_list]
+    idx = [int(subwords_list[i]) for i in id_list]
     
     return tokenizer.convert_ids_to_tokens(idx)
 
@@ -104,15 +104,17 @@ class TextEncoder(nn.Module):
             uttr_nums = batch[0]
             uttr_type = batch[1]
             wavs = batch[2]
-            input_lengths = batch[4]
-            timings = batch[5].to(self.device)
-            uttr_labels = batch[6].to(self.device)
-            labels = batch[7].to(self.device)
-            label_lengths = batch[8].to(self.device)
-            dialog_acts_labels = batch[9].to(self.device)
-            system_acts_labels = batch[10].to(self.device)
-            offset = batch[11]
-            duration = batch[12]
+            cnnae = batch[3].to(self.device)
+            fbank = batch[4].to(self.device)
+            input_lengths = batch[5]
+            timings = batch[6].to(self.device)
+            uttr_labels = batch[7].to(self.device)
+            labels = batch[8].to(self.device)
+            label_lengths = batch[9].to(self.device)
+            dialog_acts_labels = batch[10].to(self.device)
+            system_acts_labels = batch[11].to(self.device)
+            offset = batch[12]
+            duration = batch[13]
             batch_size = len(wavs)
 
             asr_loss = 0

@@ -56,16 +56,19 @@ class TGN(nn.Module):
         a_pred = np.asarray([])
         u_pred = np.asarray([])
         y = np.asarray([])
+        
+        flg=False
         for i in range(1, seq_len):
-            ui = uttr_label[i]
-            ui_pred = uttr_pred[i]
+            ui = 1-uttr_label[i]
+            ui_pred = 1-uttr_pred[i]
             ai = alpha[i]
             target = timing_label[i-1]
 
             a_gated = ui_pred * a_pre + (1-ui_pred) * ai
             yi = a_gated * ui_pred + (1-a_gated) * y_pre
 
-            if target > thres1:
+            if target > thres1 and not flg:
+                flg = True
                 if ui_pred < thres_u:
                     loss_c = -1
                 else:
@@ -81,33 +84,11 @@ class TGN(nn.Module):
         if loss_c==-1:
             loss_c = 0
             loss_e = 0
-            loss = 0
+            loss = 0            
         elif loss_c != 0:
             loss = loss + loss_c
         elif yi >= thres1: # 正解のタイミングがない場合は閾値を超えていれば最適化
             loss_e = self.criterion(y_pre, torch.tensor(1).to(self.device)*thres2)
             loss = loss + loss_e
-
+        
         return loss, (y, a_pred, u_pred)
-   
-
-class DialogActsPredictor(nn.Module):
-
-    def __init__(self, input_dim, num_dialog_acts, device):
-        super().__init__()
-        self.dialogacts_fc = nn.Linear(input_dim, num_dialog_acts)
-        self.num_dialog_acts = num_dialog_acts
-        self.criterion = nn.BCEWithLogitsLoss(reduction='sum').to(device)
-
-    def forward(self, inputs):
-        dialogacts_logits = self.dialogacts_fc(inputs)
-        # one person can have multiple dialog actions
-        # dialogacts_probs = torch.sigmoid(dialogacts_logits)
-        return dialogacts_logits
-
-    def get_loss(self, probs, targets):
-        # probs   : batch_size x num_dialog_acts
-        # targets : batch_size x num_dialog_acts
-        return self.criterion(probs, targets.float())
-
-

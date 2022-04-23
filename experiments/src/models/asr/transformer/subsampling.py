@@ -194,3 +194,22 @@ class Conv2dSubsampling8(torch.nn.Module):
         if x_mask is None:
             return x, None
         return x, x_mask[:, :, :-2:2][:, :, :-2:2][:, :, :-2:2]
+
+
+class Conv2dSubsampling5(torch.nn.Module):
+    
+    def __init__(self, idim):
+        """Construct an Conv2dSubsampling object."""
+        super(Conv2dSubsampling5, self).__init__()
+        self.conv = torch.nn.Sequential(
+            torch.nn.Conv2d(1, 1, (10, 1), (5, 1)),
+            torch.nn.ReLU(),
+        )
+        
+    def forward(self, x):
+        x = x.unsqueeze(1)  # (b, c, t, f)
+        x = self.conv(x)
+        b, c, t, f = x.size()
+        x = x.transpose(1, 2).contiguous().view(b, t, c * f)
+
+        return x

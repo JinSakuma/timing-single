@@ -8,7 +8,7 @@ from src.systems.timing.timing_all_baseline import System
 from src.utils.utils import load_json
 from src.utils.trainer_timing import trainer
 from src.utils.setup import process_config
-from src.datasets.timing_dataset import get_dataloader, get_dataset
+from src.datasets.timing_dataset3 import get_dataloader, get_dataset
 import wandb
 
 
@@ -44,7 +44,7 @@ def run(config_path, gpu_device=-1):
 	#model = ModelClass(config, device, train_dataset.input_dim, train_dataset.num_class, train_dataset.dialog_acts_num_class, 17)
 	del train_dataset
 	del val_dataset
-	model.asr_model.load_state_dict(torch.load(config.asr_continue_from_checkpoint), strict=False)
+	#model.asr_model.load_state_dict(torch.load(config.asr_continue_from_checkpoint), strict=False)
 	#model.slu_model.context_encoder.load_state_dict(torch.load(config.context_continue_from_checkpoint), strict=False)
 	#model.slu_model.dialog_acts_model.load_state_dict(torch.load(config.da_continue_from_checkpoint), strict=False)
 	#model.slu_model.system_acts_model.load_state_dict(torch.load(config.sa_continue_from_checkpoint), strict=False)

@@ -19,7 +19,7 @@ from src.utils.utils import (
 )
 
 #from src.systems.slu import SLU
-from src.models.asr.rnn.ctc import CTC
+from src.models.asr.transformer.subsampling import Conv2dSubsampling5
 from src.models.timing.rtg import RTG
 #from src.models.timing.satg_upred import SATG
 from src.utils.utils import get_cer
@@ -41,68 +41,38 @@ class System(nn.Module):
 		self.T = config.model_params.pred_offset
 
 	def create_models(self):
-		#self.config.loss_params.asr_weight>0.0:
 
-		#slu_model = SLU(
-		#	config=self.config,
-		#	device=self.device,
-		#	asr_input_dim=self.asr_input_dim,
-		#	asr_num_class=self.asr_num_class,
-		#	dialog_acts_num_class=self.dialog_acts_num_class,
-		#)
-		#self.slu_model = slu_model
-
-		asr_model = CTC(
-            #self.device,
-			input_dim=self.asr_input_dim,
-			num_class=self.asr_num_class,
-			num_layers=self.config.model_params.num_layers,
-			hidden_dim=self.config.model_params.asr_hidden_dim,
-			bidirectional=self.config.model_params.bidirectional,
-		)
-		self.asr_model = asr_model
-		self.embedding_dim = asr_model.embedding_dim
-
+		self.subsampling = Conv2dSubsampling5(self.asr_input_dim)
 		timing_model = RTG(
 			self.device,
-			self.config.model_params.asr_hidden_dim+self.dialog_acts_num_class+self.system_acts_num_class+1,
+			self.config.model_params.input_dim+self.config.model_params.cnnae_dim+self.dialog_acts_num_class+self.system_acts_num_class+1,
 			self.config.model_params.timing_hidden_dim,
 		)
 		self.timing_model = timing_model
-		
-
+        
 	def configure_optimizer_parameters(self):
 		parameters = chain(
-			self.asr_model.parameters(),
+			self.subsampling.parameters(),
 			self.timing_model.parameters(),
 		)
 
 		return parameters
 
-	def get_asr_loss(self, log_probs, input_lengths, labels, label_lengths):
-		loss = self.asr_model.get_loss(
-			log_probs,
-			input_lengths,
-			labels,
-			label_lengths,
-			blank=0,
-		)
-		return loss
-
 	def forward(self, batch, split='train'):
 		uttr_nums = batch[0]
 		uttr_type = batch[1]
 		wavs = batch[2]
-		inputs = batch[3].to(self.device)
-		input_lengths = batch[4]
-		timings = batch[5].to(self.device)
-		uttr_labels = batch[6].to(self.device)
-		labels = batch[7].to(self.device)
-		label_lengths = batch[8].to(self.device)
-		dialog_acts_labels = batch[9].to(self.device)
-		system_acts_labels = batch[10].to(self.device)
-		offset = batch[11]
-		duration = batch[12]
+		cnnae = batch[3].to(self.device)
+		fbank = batch[4].to(self.device)
+		input_lengths = batch[5]
+		timings = batch[6].to(self.device)
+		uttr_labels = batch[7].to(self.device)
+		labels = batch[8].to(self.device)
+		label_lengths = batch[9].to(self.device)
+		dialog_acts_labels = batch[10].to(self.device)
+		system_acts_labels = batch[11].to(self.device)
+		offset = batch[12]
+		duration = batch[13]
 		batch_size = len(wavs)
 
 		#outputs = self.slu_model.recog(batch)
@@ -110,17 +80,12 @@ class System(nn.Module):
 		#system_acts_probs = outputs['system_acts_probs']
 
 		i=0
-		log_probs, _, embedding = self.asr_model(inputs[i], input_lengths[i])
+		subsampled = self.subsampling(fbank[i])
+		length = max(input_lengths[i])
+		embedding = torch.cat([subsampled[:, :length, :], cnnae[i][:, :length, :]], dim=-1)
             
 		del wavs
-
-		if self.config.loss_params.asr_weight>0:
-			asr_loss = self.get_asr_loss(log_probs, input_lengths[i], labels, label_lengths)
-		else:
-			asr_loss = 0
-
-		#embedding = torch.cat([inputs, logits], dim=-1)
-	
+		asr_loss = 0
 		timing_loss = 0
 		if self.config.loss_params.timing_weight>0:
 			assert batch_size==1, "batch size must be set 1"

@@ -5,10 +5,10 @@ import random
 import getpass
 from copy import deepcopy
 from src.systems.asr.ctc_subword import System
-from src.systems.setup import process_config
+from src.utils.setup import process_config
 from src.utils.utils import load_json
 from src.utils.trainer_asr import trainer
-from src.datasets.my_harper_valley_subword_sr16000 import get_dataloader, get_dataset
+from src.datasets.asr_dataset import get_dataloader, get_dataset
 import wandb
 
 
@@ -32,8 +32,8 @@ def run(config_path, gpu_device=-1):
 		sync_tensorboard=True,
 	)
 
-	train_dataset = get_dataset(config, "train")
-	val_dataset = get_dataset(config, "val")
+	train_dataset = get_dataset(config, "train", "subword")
+	val_dataset = get_dataset(config, "val", "subword")
 	train_loader = get_dataloader(train_dataset, config, "train")
 	val_loader = get_dataloader(val_dataset, config, "val")
 

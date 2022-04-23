@@ -1,9 +1,9 @@
 {
     "exp_base": "exp",
-    "exp_name": "slu/hubert/no_context_wo_asr_pretrain",
+    "exp_name": "slu/hubert/no_context0328",
     "system": "SLU",
     "cuda": true,
-    "gpu_device": 1,
+    "gpu_device": 0,
     "seed": 1337,
     "data_loader_workers": 1,
     "data_params": {

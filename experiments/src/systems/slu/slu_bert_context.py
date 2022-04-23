@@ -153,7 +153,7 @@ class SLU(nn.Module):
 #         for i in range(batch_size):
 
         i=0  # batch_size=1
-        inputs = [w[:int(duration[i][j]*16*20)].to(self.device) for j, w in enumerate(wavs[i])]
+        inputs = [w[:int(duration[i][j]*16*50)].to(self.device) for j, w in enumerate(wavs[i])]
         for j in range(uttr_nums[i]):
             log_prob, length, emb = self.asr_model([inputs[j]])
             log_probs_list.append(log_prob)

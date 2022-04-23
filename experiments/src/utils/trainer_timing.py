@@ -113,7 +113,7 @@ def trainer(num_epochs, model, loader_dict, optimizer, device, outdir, is_use_wa
 		if best_val_loss>val_loss:
 			best_val_loss = val_loss
 			torch.save(model.state_dict(), os.path.join(outdir, "best_val_loss_model.pth"))
-			torch.save(model.asr_model.state_dict(), os.path.join(outdir, "asr_best_val_loss_model.pth"))
+			#torch.save(model.asr_model.state_dict(), os.path.join(outdir, "asr_best_val_loss_model.pth"))
 
 		if is_use_wandb:
 			wandb.log({

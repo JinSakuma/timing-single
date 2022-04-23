@@ -16,6 +16,7 @@ import nlpaug.augmenter.audio as naa
 import nlpaug.augmenter.spectrogram as nas
 from torchvision.transforms import Normalize
 from torch.utils.data import Dataset
+from transformers import BertTokenizer, BertModel, BertForMaskedLM
 
 HARPER_VALLEY_MEAN = [-29.436176]
 HARPER_VALLEY_STDEV = [14.90793]
@@ -26,6 +27,9 @@ VOCAB = [' ',"'",'~','-','.','<','>','[',']','U','N','K','a','b','c','d','e','f'
          'w','x','y','z']
 SILENT_VOCAB = ['[baby]', '[ringing]', '[laughter]', '[kids]', '[music]', 
                 '[noise]', '[unintelligible]', '[dogs]', '[cough]']
+
+with open('/mnt/aoni04/jsakuma/development/timing-single/experiments/exp/asr/vocab/subwords.txt') as f:
+    subwords_list = f.read().split("\n")
 
 
 class BaseHarperValley(Dataset):
@@ -116,29 +120,48 @@ class BaseHarperValley(Dataset):
             role_labels.append(role_label)
         return role_labels
 
-    def transcripts_to_labels(self, transcripts_list):
+    def transcripts_to_labels(self, transcripts_list, asr_target_type='phoneme', max_length=70):
         """Converts transcript texts to sequences of vocab indices for characters."""
-        transcript_labels = []
-        for transcripts in transcripts_list:
-            transcript_label = []
-            for transcript in transcripts:
-                words = transcript.split()
-                labels = []
-                for i in range(len(words)):
-                    word = words[i]
-                    if word in SILENT_VOCAB:
-                        # silent vocab builds on top of vocab
-                        label = SILENT_VOCAB.index(word) + len(VOCAB)
-                        labels.append(label)
-                    else:
-                        chars = list(word)
-                        labels.extend([VOCAB.index(ch) for ch in chars])
-                    # add a space in between words
-                    labels.append(VOCAB.index(' '))
-                labels = labels[:-1]  # remove last space
-                transcript_label.append(labels)
+        
+        if asr_target_type=='phoneme':
+            transcript_labels = []
+            for transcripts in transcripts_list:
+                transcript_label = []
+                for transcript in transcripts:
+                    words = transcript.split()
+                    labels = []
+                    for i in range(len(words)):
+                        word = words[i]
+                        if word in SILENT_VOCAB:
+                            # silent vocab builds on top of vocab
+                            label = SILENT_VOCAB.index(word) + len(VOCAB)
+                            labels.append(label)
+                        else:
+                            chars = list(word)
+                            labels.extend([VOCAB.index(ch) for ch in chars])
+                        # add a space in between words
+                        labels.append(VOCAB.index(' '))
+                    labels = labels[:-1]  # remove last space
+                    transcript_label.append(labels)
 
-            transcript_labels.append(transcript_label)
+                transcript_labels.append(transcript_label)
+                
+        elif asr_target_type=='subword':
+            transcript_labels = []
+            for transcripts in transcripts_list:
+                transcript_label = []
+                for transcript in transcripts:
+                    result = self.tokenizer(transcript, max_length=max_length, padding="max_length", truncation=True)
+                    tmp = result['input_ids']
+                    tmp = np.array(tmp)
+                    tmp = tmp[tmp>0]
+                    label = [subwords_list.index(str(i)) for i in tmp]
+                    transcript_label.append(label)
+
+                transcript_labels.append(transcript_label)
+        else:
+            raise NotImplemented
+
         return transcript_labels
     
     def transcripts_to_bert_labels(self, transcripts_list, max_length=70):
@@ -224,12 +247,17 @@ class MyHarperValleyTimingDataset(BaseHarperValley):
             prune_speakers=True,
             prune_silent=False,
             bert_max_length=70,
+            asr_target_type='phoneme',
         ):
         super().__init__(root, min_utterance_length, min_speaker_utterances, prune_speakers, prune_silent, wav_maxlen)
         
         self.offset = 300
         dialog_vocab_path = os.path.join(root, 'vocab/dialog_act_vocab.txt')
         system_vocab_path = os.path.join(root, 'vocab/system_act_vocab.txt')
+        
+        self.asr_target_type=asr_target_type
+        if asr_target_type=="subword":
+            self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
         
         with open(dialog_vocab_path) as f:
             dialog_acts_vocab = f.read().split("\n")
@@ -267,14 +295,19 @@ class MyHarperValleyTimingDataset(BaseHarperValley):
             timing_ms_list.append(data['timing_ms'])
         
 
-        human_transcript_labels = self.transcripts_to_labels(human_transcripts)
+        human_transcript_labels = self.transcripts_to_labels(human_transcripts, asr_target_type)
         dialog_acts_labels = self.dialog_acts_to_labels(dialog_acts, dialog_acts_vocab)
         next_acts_labels = self.dialog_acts_to_labels(next_acts, system_acts_vocab)
         
         self.dialog_acts_vocab = dialog_acts_vocab
         self.system_acts_vocab = system_acts_vocab
             
-        self.num_class = len(VOCAB) + len(SILENT_VOCAB)
+        if asr_target_type=='phoneme':
+            self.num_class = len(VOCAB) + len(SILENT_VOCAB)
+        elif asr_target_type=='subword':
+            self.num_class = len(subwords_list)
+        else:
+            raise NotImplemented
         self.pad_index = 0
 
         self.root = root
@@ -298,7 +331,7 @@ class MyHarperValleyTimingDataset(BaseHarperValley):
         self.n_mels = n_mels
         self.n_fft = n_fft
         self.win_length = win_length
-        self.hop_length = hop_length
+        self.hop_length = hop_length        
 
     def indices_to_chars(self, indices):
         # add special characters in front (since we did this above)
@@ -394,8 +427,8 @@ class MyHarperValleyTimingDataset(BaseHarperValley):
             cnnae = torch.from_numpy(cnnae).float()
             fbank = torch.from_numpy(fbank).float()
             
-            length = len(fbank)-(self.offset//50)
-            feat = torch.cat([fbank[:length], cnnae[:length]], dim=-1)
+            length = len(cnnae)-(self.offset//50)
+#             feat = torch.cat([fbank[:length], cnnae[:length]], dim=-1)
             
             timing_label = torch.from_numpy(timing_label).long()
             uttr_label = torch.from_numpy(uttr_label).long()
@@ -407,7 +440,8 @@ class MyHarperValleyTimingDataset(BaseHarperValley):
                     'indices': index,
                     'uttr_type': [uttr_type], 
                     'wav': [wav],
-                    'inputs': [feat],
+                    'cnnae': [cnnae],
+                    'fbank': [fbank],
                     'input_lengths': [length], 
                     'timing': timing_label.unsqueeze(0), 
                     'uttr_labels': uttr_label.unsqueeze(0), 
@@ -419,7 +453,8 @@ class MyHarperValleyTimingDataset(BaseHarperValley):
             else:
                 example['uttr_type'].append(uttr_type)
                 example['wav'].append(wav)
-                example['inputs'].append(feat)
+                example['cnnae'].append(cnnae)
+                example['fbank'].append(fbank)
                 example['input_lengths'].append(length)
                 example['timing'] = torch.cat([example['timing'], timing_label.unsqueeze(0)])
                 example['uttr_labels'] = torch.cat([example['uttr_labels'], uttr_label.unsqueeze(0)])
@@ -440,7 +475,7 @@ class MyHarperValleyTimingDataset(BaseHarperValley):
     
 def collate_fn(batch):
     
-    indices, uttr_type, wavs, inputs, input_lengths, timings, uttr_labels, labels, label_lengths, dialog_acts, next_acts, offset, duration = zip(*batch)
+    indices, uttr_type, wavs, cnnae, fbank, input_lengths, timings, uttr_labels, labels, label_lengths, dialog_acts, next_acts, offset, duration = zip(*batch)
     
     batch_size = len(indices)
     
@@ -450,13 +485,17 @@ def collate_fn(batch):
     max_len = max([len(l) for l in labels])
     uttr_nums = torch.tensor([len(l) for l in labels])
     
-    wav_len = max([len(l) for inp in inputs for l in inp])
+    cnnae_len = max([len(l) for inp in cnnae for l in inp])
+    fbank_len = max([len(l) for inp in fbank for l in inp])
+    wav_len = max([l for inp in input_lengths for l in inp])
     label_len = max([max(l) for l in label_lengths])
     
-    dim = inputs[0][0].shape[-1]
+    cnnae_dim = cnnae[0][0].shape[-1]
+    fbank_dim = fbank[0][0].shape[-1]
     
     uttr_type_ = torch.zeros(batch_size, max_len).long()
-    inputs_ = torch.zeros(batch_size, max_len, wav_len, dim)
+    cnnae_ = torch.zeros(batch_size, max_len, cnnae_len, cnnae_dim)
+    fbank_ = torch.zeros(batch_size, max_len, fbank_len, fbank_dim)
     input_lengths_ = torch.zeros(batch_size, max_len).long()
     timings_ = torch.zeros(batch_size, max_len, wav_len).long()
     uttr_labels_ = torch.zeros(batch_size, max_len, wav_len).long()
@@ -467,11 +506,13 @@ def collate_fn(batch):
 #     speaker_ids_ = torch.zeros(batch_size, max_len).long()
 
     for i in range(batch_size):
-        d = len(inputs[i])
+        d = len(input_lengths[i])
         
         for j in range(d):
-            l = len(inputs[i][j])
-            inputs_[i, j, :l, :] = inputs[i][j]
+            l1 = len(cnnae[i][j])
+            l2 = len(fbank[i][j])
+            cnnae_[i, j, :l1, :] = cnnae[i][j]
+            fbank_[i, j, :l2, :] = fbank[i][j]
             
         uttr_type_[i, :d] = torch.tensor(uttr_type[i]).long()       
         input_lengths_[i, :d] = torch.tensor(input_lengths[i]).long()
@@ -483,7 +524,7 @@ def collate_fn(batch):
         next_acts_[i, :d, :] = next_acts[i]
 #         speaker_ids_[i, :d] = torch.tensor(speaker_ids[i]).long()
 
-    return uttr_nums, uttr_type_, wavs, inputs_, input_lengths_, timings_, uttr_labels_, labels_, label_lengths_, dialog_acts_, next_acts_, offset, duration
+    return uttr_nums, uttr_type_, wavs, cnnae_, fbank_, input_lengths_, timings_, uttr_labels_, labels_, label_lengths_, dialog_acts_, next_acts_, offset, duration
 
 
 def create_dataloader(dataset, batch_size, shuffle=True, pin_memory=True, num_workers=2):
@@ -497,7 +538,7 @@ def create_dataloader(dataset, batch_size, shuffle=True, pin_memory=True, num_wo
     )
     return loader
 
-def get_dataset(config, split="train"):
+def get_dataset(config, split="train", asr_target_type="phoneme"):
     wav_maxlen = config.data_params.wav_maxlen
     transcript_maxlen = config.data_params.transcript_maxlen
     root = config.data_params.harpervalley_root
@@ -519,6 +560,7 @@ def get_dataset(config, split="train"):
             prune_speakers=True,
             prune_silent=True,
             bert_max_length = config.data_params.bert_max_length,
+            asr_target_type=asr_target_type,
         )
     elif split=='val':
         dataset = MyHarperValleyTimingDataset(
@@ -537,6 +579,7 @@ def get_dataset(config, split="train"):
             prune_speakers=True,
             prune_silent=True,
             bert_max_length = config.data_params.bert_max_length,
+            asr_target_type=asr_target_type,
         )
     else:
         dataset = MyHarperValleyTimingDataset(
@@ -555,6 +598,7 @@ def get_dataset(config, split="train"):
             prune_speakers=True,
             prune_silent=True,
             bert_max_length = config.data_params.bert_max_length,
+            asr_target_type=asr_target_type,
         )
 
     return dataset
