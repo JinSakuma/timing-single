@@ -1,6 +1,6 @@
 {
     "exp_base": "exp",
-    "exp_name": "timing/baseline_asr_pretrain",
+    "exp_name": "timing/baseline_fbanl40",
     "system": "System",
     "cuda": true,
     "gpu_device": 0,
@@ -22,7 +22,8 @@
     },
     "model_params": {
         "num_layers": 2,
-        "input_dim": 168,
+        "input_dim": 40,
+        "cnnae_dim": 128,
         "asr_hidden_dim": 512,
         "timing_hidden_dim": 256,
         "hidden_dim": 768,
