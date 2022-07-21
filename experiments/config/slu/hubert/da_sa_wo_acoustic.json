@@ -1,6 +1,6 @@
 {
     "exp_base": "exp",
-    "exp_name": "slu/hubert/wo_acousitc2",
+    "exp_name": "slu/hubert/wo_acoustic4023",
     "system": "SLU",
     "cuda": true,
     "gpu_device": 0,

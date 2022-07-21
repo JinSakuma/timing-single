@@ -539,7 +539,7 @@ def create_dataloader(dataset, batch_size, shuffle=True, pin_memory=True, num_wo
     )
     return loader
 
-def get_dataset(config, split="train", asr_target_type="phoneme"):
+def get_dataset(config, split="train", asr_target_type="subword"):
     wav_maxlen = config.data_params.wav_maxlen
     transcript_maxlen = config.data_params.transcript_maxlen
     root = config.data_params.harpervalley_root

@@ -21,6 +21,7 @@ from src.utils.utils import (
 from src.models.recognition.context_encoder import ContextEncoder
 from src.models.asr.hubert.hubert3 import CTC
 from src.models.dialog_acts.transformer3 import (
+# from src.models.dialog_acts.transformer2 import (
     SystemActsPredictor,
     DialogActsPredictor,
 )
@@ -342,8 +343,10 @@ class SLU(nn.Module):
             #    asr_cer = 0
 
             outputs = {
-                'dialog_acts_emb': dialog_acts_emb,
-                'system_acts_emb': system_acts_emb,
+                'dialog_acts_probs': dialog_acts_probs,
+                'system_acts_probs': system_acts_probs,
+#                 'dialog_acts_emb': dialog_acts_emb,
+#                 'system_acts_emb': system_acts_emb,
 #                 f'{split}_loss': loss,
 #                 f'{split}_asr_loss': asr_loss,
 #                 f'{split}_timing_loss': dialog_acts_loss,

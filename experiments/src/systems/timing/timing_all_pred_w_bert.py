@@ -60,7 +60,8 @@ class System(nn.Module):
 
 		timing_model = RTG(
 			self.device,
-			self.config.model_params.input_dim+self.config.model_params.cnnae_dim+128+128+self.text_encoding_dim+1,
+# 			self.config.model_params.input_dim+self.config.model_params.cnnae_dim+128+128+self.text_encoding_dim+1,
+			self.config.model_params.input_dim+self.config.model_params.cnnae_dim+16+17+self.text_encoding_dim+1,
 			self.config.model_params.timing_hidden_dim,
 		)
 		self.timing_model = timing_model

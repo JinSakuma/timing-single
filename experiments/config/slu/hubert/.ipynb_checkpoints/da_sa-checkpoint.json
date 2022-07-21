@@ -1,13 +1,13 @@
 {
     "exp_base": "exp",
-    "exp_name": "timing/slu_wo_acoustic0423",
-    "system": "System",
+    "exp_name": "slu/hubert/no_context0328",
+    "system": "SLU",
     "cuda": true,
-    "gpu_device": 1,
-    "seed": 1338,
+    "gpu_device": 0,
+    "seed": 1337,
     "data_loader_workers": 1,
     "data_params": {
-        "harpervalley_root": "/mnt/aoni04/jsakuma/development/timing-single/dump",
+        "harpervalley_root": "/mnt/aoni04/jsakuma/development/harper-valley/dump",
         "wav_maxlen": 2000,
         "transcript_maxlen": 200,
         "n_mels": 80,
@@ -22,12 +22,10 @@
     },
     "model_params": {
         "num_layers": 2,
-        "input_dim": 80,
-        "cnnae_dim": 128,
+        "input_dim": 168,
+        "hubert_asr_num_class": 746,
+        "hubert_input_dim": 768,
         "asr_hidden_dim": 512,
-        "timing_hidden_dim": 256,
-        "text_hidden_dim": 256,
-        "hidden_dim": 768,
         "bidirectional": false,
         "pred_offset": 0
     },
@@ -41,9 +39,9 @@
     "loss_params": {
         "asr_weight": 0.0,
         "task_type_weight": 0.0,
-        "dialog_acts_weight": 0.0,
-        "system_acts_weight": 0.0,
-        "timing_weight": 1.0
+        "dialog_acts_weight": 0.5,
+        "system_acts_weight": 0.5,
+        "timing_weight": 0.0
     },
     "optim_params": {
         "batch_size": 1,
@@ -56,10 +54,8 @@
     "validate": true,
     "copy_checkpoint_freq": 5,
     "is_use_wandb": false,
-    "streaming_asr_continue_from_checkpoint": "exp/asr/rnn/ctc_phoneme_l2_batch4/asr_best_val_loss_model.pth",
     "asr_continue_from_checkpoint": "exp/asr/hubert/ctc/asr_best_val_loss_model.pth",
-    "context_continue_from_checkpoint": "exp/slu/hubert/wo_acoustic/context_best_val_loss_model.pth",
-    "da_continue_from_checkpoint": "exp/slu/hubert/wo_acoustic0423/da_best_val_loss_model.pth",
-    "sa_continue_from_checkpoint": "exp/slu/hubert/wo_acoustic0423/sa_best_val_loss_model.pth",
-    "slu_continue_from_checkpoint": "exp/slu/hubert/wo_acoustic0423/slu_best_val_loss_model.pth"
+    "context_continue_from_checkpoint": "",
+    "da_continue_from_checkpoint": "",
+    "sa_continue_from_checkpoint": ""
 }

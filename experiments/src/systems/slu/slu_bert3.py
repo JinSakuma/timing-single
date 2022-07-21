@@ -449,6 +449,8 @@ class SLU(nn.Module):
             outputs = {
                 'dialog_acts_emb': dialog_acts_emb,
                 'system_acts_emb': system_acts_emb,
+                'dialog_acts_probs': dialog_acts_probs,
+                'system_acts_probs': system_acts_probs,
                 'bert_encoding': pooled_out,
 #                 f'{split}_loss': loss,
 #                 f'{split}_asr_loss': asr_loss,

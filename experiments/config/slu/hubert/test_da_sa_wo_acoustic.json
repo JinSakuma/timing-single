@@ -56,6 +56,7 @@
     "is_use_wandb": false,
     "asr_continue_from_checkpoint": "exp/asr/hubert/ctc/asr_best_val_loss_model.pth",
     "context_continue_from_checkpoint": "exp/slu/hubert/no_context",
-    "da_continue_from_checkpoint": "exp/slu/hubert/wo_acousitc2/da_best_val_loss_model.pth",
-    "sa_continue_from_checkpoint": "exp/slu/hubert/wo_acousitc2/sa_best_val_loss_model.pth"
+    "slu_continue_from_checkpoint": "exp/slu/hubert/wo_acoustic4023/slu_best_val_loss_model.pth",
+    "da_continue_from_checkpoint": "exp/slu/hubert/wo_acoustic4023/da_best_val_loss_model.pth",
+    "sa_continue_from_checkpoint": "exp/slu/hubert/wo_acoustic4023/sa_best_val_loss_model.pth"
 }
