@@ -10,6 +10,8 @@
 - s3prlをexperimentsディレクトリ直下に配置 https://github.com/s3prl/s3prl
 - env.txtからAnacondaの仮想環境を構築 (必要なライブラリは揃うはずだが自信はない...)
 
+※ torch==1.7.1, CUDA=10.1で動作を確認した
+
  
 ## 実行
 
