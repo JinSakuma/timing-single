@@ -4,10 +4,10 @@ import numpy
 import random
 import getpass
 from copy import deepcopy
-from src.systems.timing.w_label import System
+from src.systems.slu.slu_wo_linguistic import SLU
 from src.utils.setup import process_config
 from src.utils.utils import load_json
-from src.utils.trainer_timing import trainer
+from src.utils.trainer_da_sa import trainer
 from src.datasets.timing_dataset import get_dataloader, get_dataset
 import wandb
 
@@ -34,16 +34,17 @@ def run(config_path, gpu_device=-1):
 
 	train_dataset = get_dataset(config, "train")
 	val_dataset = get_dataset(config, "val")
+	#val_dataset = get_dataset(config, "test")
 	train_loader = get_dataloader(train_dataset, config, "train")
 	val_loader = get_dataloader(val_dataset, config, "val")
+	#val_loader = get_dataloader(val_dataset, config, "test")
 
 	loader_dict = {"train": train_loader, "val": val_loader}
-	#loader_dict = {"train": train_loader, "val": val_loader, "test": test_loader}
-
-	model = ModelClass(config, device, config.model_params.input_dim, train_dataset.num_class, train_dataset.dialog_acts_num_class, train_dataset.next_acts_num_class)
+    
+	model = ModelClass(config, device, config.model_params.hubert_input_dim, config.model_params.hubert_asr_num_class, train_dataset.dialog_acts_num_class, train_dataset.next_acts_num_class)
 	del train_dataset
 	del val_dataset
-	model.slu_model.asr_model.load_state_dict(torch.load(config.asr_continue_from_checkpoint), strict=False)
+	model.asr_model.load_state_dict(torch.load(config.asr_continue_from_checkpoint), strict=False)
 	model.to(device)
 	parameters = model.configure_optimizer_parameters()
 	optimizer = torch.optim.AdamW(

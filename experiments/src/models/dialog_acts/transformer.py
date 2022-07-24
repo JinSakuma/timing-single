@@ -54,8 +54,8 @@ class DialogActsPredictor(nn.Module):
         )        
 
         self.fc1 = nn.Linear(input_dim, idim)
-        self.fc2 = nn.Linear(odim, odim//4)
-        self.fc3 = nn.Linear(odim//4, num_dialog_acts)
+        self.fc2 = nn.Linear(odim, odim//2)
+        self.fc3 = nn.Linear(odim//2, num_dialog_acts)
         self.num_dialog_acts = num_dialog_acts
         self.input_dim = input_dim
         self.criterion = nn.BCEWithLogitsLoss(reduction='sum').to(device)
@@ -102,8 +102,8 @@ class SystemActsPredictor(nn.Module):
         )        
 
         self.fc1 = nn.Linear(input_dim, idim)
-        self.fc2 = nn.Linear(odim, odim//4)
-        self.fc3 = nn.Linear(odim//4, num_dialog_acts)
+        self.fc2 = nn.Linear(odim, odim//2)
+        self.fc3 = nn.Linear(odim//2, num_dialog_acts)
         
         self.num_dialog_acts = num_dialog_acts
         self.criterion = nn.BCEWithLogitsLoss(reduction='sum').to(device)

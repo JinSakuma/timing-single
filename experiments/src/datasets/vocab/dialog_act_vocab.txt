@@ -1,0 +1,16 @@
+acknowledgement
+bear_with_me
+closing
+confirm_data
+data_communication
+data_question
+data_response
+filler_disfluency
+greeting
+open_question
+other
+problem_description
+procedure_explanation
+response
+thanks
+yes_response

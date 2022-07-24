@@ -28,7 +28,7 @@ VOCAB = [' ',"'",'~','-','.','<','>','[',']','U','N','K','a','b','c','d','e','f'
 SILENT_VOCAB = ['[baby]', '[ringing]', '[laughter]', '[kids]', '[music]', 
                 '[noise]', '[unintelligible]', '[dogs]', '[cough]']
 
-with open('/mnt/aoni04/jsakuma/development/timing-single/experiments/exp/asr/vocab/subwords.txt') as f:
+with open('src/datasets/vocab/subwords.txt') as f:
     subwords_list = f.read().split("\n")
 
 class BaseHarperValley(Dataset):
@@ -323,6 +323,9 @@ class MyHarperValleyTimingDataset(BaseHarperValley):
         crop_duration_ms = self.crop_duration_ms_list[index]
         uttr_duration_ms = self.uttr_duration_ms_list[index]
 
+        wav, sr = torchaudio.load(wavpath)
+        wav = wav.numpy()[0]
+        wav = torch.from_numpy(wav).float()
         cnnae = np.load(cnnae_path)
         fbank = np.load(fbank_path)
 
@@ -344,7 +347,8 @@ class MyHarperValleyTimingDataset(BaseHarperValley):
 
         example = {
             'indices': index,
-            'uttr_type': uttr_type, 
+            'uttr_type': uttr_type,
+            'wav': wav,
             'cnnae': cnnae,
             'fbank': fbank,
             'input_lengths': duration, 
@@ -360,7 +364,7 @@ class MyHarperValleyTimingDataset(BaseHarperValley):
     
 def collate_fn(batch):
     
-    indices, uttr_type, cnnae, fbank, input_lengths, labels, label_lengths = zip(*batch)
+    indices, uttr_type, wavs, cnnae, fbank, input_lengths, labels, label_lengths = zip(*batch)
     
     batch_size = len(indices)
     
@@ -392,7 +396,7 @@ def collate_fn(batch):
         labels_[i, :] = torch.tensor(labels[i][:label_len]).long()
         label_lengths_[i] = torch.tensor(label_lengths[i]).long()
 
-    return uttr_nums, uttr_type_, cnnae_, fbank_, input_lengths_, labels_, label_lengths_
+    return uttr_nums, uttr_type_, wavs, cnnae_, fbank_, input_lengths_, labels_, label_lengths_
 
 
 def create_dataloader(dataset, batch_size, shuffle=True, pin_memory=True, num_workers=2):

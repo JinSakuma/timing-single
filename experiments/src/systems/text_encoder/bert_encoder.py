@@ -19,14 +19,14 @@ from src.utils.utils import (
 )
 
 from src.models.encoders.bert_encoder import BertEncoder
-from src.models.asr.hubert.hubert3 import CTC
+from src.models.asr.hubert.hubert import CTC
 from src.utils.utils import get_cer
 torch.autograd.set_detect_anomaly(True)
 
 from transformers import BertTokenizer, BertModel, BertForMaskedLM
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
 
-with open('/mnt/aoni04/jsakuma/development/timing-single/experiments/exp/asr/vocab/subwords.txt') as f:
+with open('src/datasets/vocab/subwords.txt') as f:
     subwords_list = f.read().split("\n")
     
 def id2token(id_list):

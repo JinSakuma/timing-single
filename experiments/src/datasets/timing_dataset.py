@@ -28,7 +28,7 @@ VOCAB = [' ',"'",'~','-','.','<','>','[',']','U','N','K','a','b','c','d','e','f'
 SILENT_VOCAB = ['[baby]', '[ringing]', '[laughter]', '[kids]', '[music]', 
                 '[noise]', '[unintelligible]', '[dogs]', '[cough]']
 
-with open('/mnt/aoni04/jsakuma/development/timing-single/experiments/exp/asr/vocab/subwords.txt') as f:
+with open('src/datasets/vocab/subwords.txt') as f:
     subwords_list = f.read().split("\n")
 
 
@@ -183,9 +183,10 @@ class BaseHarperValley(Dataset):
         actions_list = []
         for dialogacts in dialogacts_list:
             actions = []
-            for acts in dialogacts:
+            for acts in dialogacts:               
                 onehot = [0 for _ in range(len(vocab))]
                 for act in acts:
+                    act = act.replace('caller_', '').replace('agent_', '')
                     onehot[vocab.index(act)] = 1
                 actions.append(onehot)
                 
@@ -252,8 +253,8 @@ class MyHarperValleyTimingDataset(BaseHarperValley):
         super().__init__(root, min_utterance_length, min_speaker_utterances, prune_speakers, prune_silent, wav_maxlen)
         
         self.offset = 300
-        dialog_vocab_path = os.path.join(root, 'vocab/dialog_act_vocab.txt')
-        system_vocab_path = os.path.join(root, 'vocab/system_act_vocab.txt')
+        dialog_vocab_path = 'src/datasets/vocab/dialog_act_vocab.txt'
+        system_vocab_path = 'src/datasets/vocab/system_act_vocab.txt'
         
         self.asr_target_type=asr_target_type
         if asr_target_type=="subword":
@@ -539,6 +540,7 @@ def create_dataloader(dataset, batch_size, shuffle=True, pin_memory=True, num_wo
     return loader
 
 def get_dataset(config, split="train", asr_target_type="phoneme"):
+#def get_dataset(config, split="train", asr_target_type="subword"):    
     wav_maxlen = config.data_params.wav_maxlen
     transcript_maxlen = config.data_params.transcript_maxlen
     root = config.data_params.harpervalley_root

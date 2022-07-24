@@ -4,7 +4,7 @@ import numpy
 import random
 import getpass
 from copy import deepcopy
-from src.systems.timing.w_label import System
+from src.systems.timing.wo_linguistic import System
 from src.utils.setup import process_config
 from src.utils.utils import load_json
 from src.utils.trainer_timing import trainer
@@ -44,6 +44,8 @@ def run(config_path, gpu_device=-1):
 	del train_dataset
 	del val_dataset
 	model.slu_model.asr_model.load_state_dict(torch.load(config.asr_continue_from_checkpoint), strict=False)
+	model.slu_model.dialog_acts_model.load_state_dict(torch.load(config.da_continue_from_checkpoint), strict=False)
+	model.slu_model.system_acts_model.load_state_dict(torch.load(config.sa_continue_from_checkpoint), strict=False)
 	model.to(device)
 	parameters = model.configure_optimizer_parameters()
 	optimizer = torch.optim.AdamW(

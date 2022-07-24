@@ -4,12 +4,11 @@ import numpy
 import random
 import getpass
 from copy import deepcopy
-#from src.systems.slu.slu3 import SLU
-from src.systems.slu.slu_bert_wo_acoustic2 import SLU
+from src.systems.slu.slu import SLU
 from src.utils.setup import process_config
 from src.utils.utils import load_json
 from src.utils.tester_da_sa import tester
-from src.datasets.timing_dataset2 import get_dataloader, get_dataset
+from src.datasets.timing_dataset import get_dataloader, get_dataset
 import wandb
 
 
@@ -40,15 +39,11 @@ def run(config_path, gpu_device=-1):
 	test_loader = get_dataloader(test_dataset, config, "test")
 
 	loader_dict = {"val": val_loader, "test": test_loader}
-	#loader_dict = {"train": train_loader, "val": val_loader, "test": test_loader}
 
 	model = ModelClass(config, device, config.model_params.hubert_input_dim, config.model_params.hubert_asr_num_class, val_dataset.dialog_acts_num_class, val_dataset.next_acts_num_class)
 	del val_dataset
 	del test_dataset
-	#model.asr_model.load_state_dict(torch.load(config.asr_continue_from_checkpoint), strict=False)
 	model.load_state_dict(torch.load(config.slu_continue_from_checkpoint), strict=False)
-	#model.dialog_acts_model.load_state_dict(torch.load(config.da_continue_from_checkpoint), strict=False)
-	#model.system_acts_model.load_state_dict(torch.load(config.sa_continue_from_checkpoint), strict=False)
 	model.to(device)
 	parameters = model.configure_optimizer_parameters()
 	optimizer = torch.optim.AdamW(
