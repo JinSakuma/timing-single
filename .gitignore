@@ -6,6 +6,6 @@ __pycache__/
 data/
 dump/
 experiments/exp/
-experiments/notebooks/
+experiments/s3prl/
 experiments/wandb/
 
