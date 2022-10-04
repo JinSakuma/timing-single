@@ -1,5 +1,8 @@
 # timing-single
  1対1対話における発話タイミングの推定
+ 
+ Accepted to INTERSPEECH2022  
+ https://www.isca-speech.org/archive/interspeech_2022/sakuma22_interspeech.html
 
 ## データセット
  Harper Valley Bank Courpus  
